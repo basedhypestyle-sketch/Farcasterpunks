@@ -8,7 +8,11 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "src",  // Set base URL to the src directory
+    "paths": {
+      "@/*": ["*"]  // Allow @ to point to src
+    }
   },
   "include": ["next-env.d.ts", "src/**/*"],
   "exclude": ["node_modules"]
