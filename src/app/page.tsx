@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import { useFarcaster } from "@/lib/useFarcaster";
+from import useFarcaster from '@/lib/useFarcaster';
+
 
 export default function Page() {
   const { inWarpcast } = useFarcaster();
