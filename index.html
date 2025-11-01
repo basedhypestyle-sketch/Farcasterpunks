@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Based Glyphs Punks — Mint</title>
+  <meta name="description" content="Based Glyphs Punks — Mint directly on Base via SeaDrop" />
+  <meta property="og:title" content="Based Glyphs Punks — Mint" />
+  <meta property="og:description" content="Mint Based Glyphs Punks on Base. Price read from chain." />
+  <meta property="og:image" content="https://based-glyphs-punks.vercel.app/public/assets/logo.png" />
+  <style>
+    :root{--bg:#04060a;--card:#071019;--muted:#9aa4b2;--accent:#06b6d4}
+    body{margin:0;background:var(--bg);color:#fff;font-family:Inter,Arial,Helvetica,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+    .wrap{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:18px}
+    img.logo{width:88px;height:88px;border-radius:16px;object-fit:cover;background:#0b1220;padding:8px}
+    h1{margin:0;font-size:28px;line-height:1;color:#fff;}
+    .card{margin-top:18px;padding:28px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 40px rgba(0,0,0,0.6);text-align:center}
+    .social{display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    .social a{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;text-decoration:none;background:rgba(255,255,255,0.02);color:#cfeef8}
+    .social img{width:20px;height:20px;filter:grayscale(0.2) contrast(120%)}
+    .muted{color:var(--muted)}
+    .controls{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:16px;flex-wrap:wrap}
+    input[type=number]{width:100px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff;text-align:center}
+    button{padding:12px 18px;border-radius:10px;border:0;background:var(--accent);color:#002020;font-weight:700;cursor:pointer}
+    footer{margin-top:14px;color:#6b7280;font-size:13px;text-align:center}
+    .meta{display:flex;gap:8px;justify-content:center;margin-top:10px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="public/assets/logo.png" alt="logo" class="logo"/>
+      <div>
+        <h1>Based Glyphs Punks</h1>
+        <div class="muted">Exclusive NFT collection — mint directly on Base</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div style="max-width:720px;margin:0 auto">
+        <p class="muted">Price & feeRecipient are read from SeaDrop on-chain. Connect wallet, refresh price, then mint.</p>
+
+        <div style="margin-top:12px;">
+          <label>Qty: <input id="qty" type="number" value="1" min="1" /></label>
+        </div>
+
+        <div class="controls">
+          <button id="connect">Connect Wallet</button>
+          <button id="refresh">Refresh Price</button>
+          <button id="mint">Mint Now</button>
+        </div>
+
+        <p id="priceLine" style="margin-top:12px" class="muted">Price (per token): <span id="price">-</span></p>
+        <p id="feeLine" class="muted">Fee recipient: <span id="fee">-</span></p>
+        <p id="status" style="margin-top:8px;color:#cfcfcf">Status: idle</p>
+
+        <div class="social" title="Links">
+          <a href="https://x.com/basedglyphs" target="_blank"><img src="public/assets/icon-twitter.png" alt="twitter"/> Twitter</a>
+          <a href="https://opensea.io/collection/based-glyphs-punks" target="_blank"><img src="public/assets/icon-opensea.png" alt="opensea"/> OpenSea</a>
+          <a href="https://magiceden.io/marketplace/based_glyphs_punks" target="_blank"><img src="public/assets/icon-magic.png" alt="magic"/> MagicEden</a>
+          <a href="https://warpcast.com/basedglyphs" target="_blank"><img src="public/assets/icon-farcaster.png" alt="farcaster"/> Farcaster</a>
+          <a href="https://basedglyphs.xyz" target="_blank"><img src="public/assets/icon-market.png" alt="market"/> Website</a>
+        </div>
+
+        <div class="meta">SeaDrop: <a class="muted" href="https://basescan.org/address/0x00005EA00Ac477B1030CE78506496e8C2dE24bf5" target="_blank">0x00005EA0…24bf5</a> · Contract: <a class="muted" href="https://basescan.org/address/0xA7A8E04195ab59c68e9d4fca396b6a4c42a446d7" target="_blank">Based Glyphs Punks</a></div>
+      </div>
+    </div>
+    <footer>© 2025 Based Glyphs Punks</footer>
+  </div>
+
+<script type="module">
+import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.esm.min.js";
+
+const SEADROP_ADDRESS = "0x00005EA00Ac477B1030CE78506496e8C2dE24bf5";
+const NFT_CONTRACT = "0xA7A8E04195ab59c68e9d4fca396b6a4c42a446d7";
+const FALLBACK_FEE_RECIPIENT = "0xd8556fDC3EBfa3EC6740C92C3420606Bc6c882f0";
+const FALLBACK_PRICE_ETH = "0.00005";
+
+const SEADROP_ABI = [
+  "function getPublicDrop(address nftContract) external view returns (uint80 mintPrice, uint48 startTime, uint48 endTime, uint16 maxTotalMintableByWallet, uint16 feeBps, bool restrictFeeRecipients)",
+  "function mintPublic(address nftContract, address feeRecipient, address minterIfNotPayer, uint256 quantity) external payable",
+  "function getAllowedFeeRecipients(address nftContract) external view returns (address[] memory)",
+  "function getFeeRecipients(address nftContract) external view returns (address[] memory)"
+];
+
+const connectBtn = document.getElementById("connect");
+const refreshBtn = document.getElementById("refresh");
+const mintBtn = document.getElementById("mint");
+const qtyEl = document.getElementById("qty");
+const priceEl = document.getElementById("price");
+const feeEl = document.getElementById("fee");
+const statusEl = document.getElementById("status");
+
+let provider, signer;
+
+function setStatus(t){ statusEl.innerText = "Status: " + t; console.log(t); }
+function short(a){ return a ? a.slice(0,6) + "..." + a.slice(-4) : "—"; }
+
+async function ensureBaseNetwork() {
+  if (!window.ethereum) throw new Error("No wallet provider");
+  const chainId = await window.ethereum.request({ method: "eth_chainId" });
+  const BASE_CHAIN_ID_HEX = "0x2135"; // 8453
+  if (chainId !== BASE_CHAIN_ID_HEX) {
+    try {
+      await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_ID_HEX }] });
+    } catch (err) {
+      throw err;
+    }
+  }
+}
+
+async function readDropConfig() {
+  try {
+    setStatus("Reading publicDrop config from SeaDrop...");
+    const readProvider = window.ethereum ? new ethers.BrowserProvider(window.ethereum) : new ethers.JsonRpcProvider("https://mainnet.base.org");
+    const seadrop = new ethers.Contract(SEADROP_ADDRESS, SEADROP_ABI, readProvider);
+
+    const publicDrop = await seadrop.getPublicDrop(NFT_CONTRACT);
+    const mintPriceWei = BigInt(publicDrop[0].toString ? publicDrop[0].toString() : publicDrop[0]);
+    const feeBps = Number(publicDrop[4]);
+    const restrict = Boolean(publicDrop[5]);
+
+    const mintPriceEth = ethers.formatEther(mintPriceWei);
+    priceEl.innerText = mintPriceEth + " ETH";
+
+    let feeRecipient = ethers.ZeroAddress;
+    if (!restrict) {
+      feeRecipient = ethers.ZeroAddress;
+      feeEl.innerText = "ZeroAddress (no restriction)";
+      setStatus("Public drop (no fee restriction).");
+    } else {
+      try {
+        setStatus("restrictFeeRecipients=true — trying to read allowed recipients...");
+        let recipients = [];
+        try {
+          recipients = await seadrop.getAllowedFeeRecipients(NFT_CONTRACT);
+        } catch (e1) {
+          recipients = await seadrop.getFeeRecipients(NFT_CONTRACT);
+        }
+        if (recipients && recipients.length > 0) {
+          feeRecipient = recipients[0];
+          feeEl.innerText = short(feeRecipient) + " (from SeaDrop helper)";
+          setStatus("Using allowed feeRecipient from SeaDrop helper.");
+        } else {
+          throw new Error("no recipients from helper");
+        }
+      } catch (err) {
+        feeRecipient = FALLBACK_FEE_RECIPIENT;
+        feeEl.innerText = short(feeRecipient) + " (fallback)";
+        setStatus("Using fallback feeRecipient from multiConfigure.");
+      }
+    }
+
+    return { mintPriceWei, feeRecipient, feeBps, restrict };
+  } catch (err) {
+    console.warn("readDropConfig failed:", err);
+    const fallbackWei = ethers.parseEther(FALLBACK_PRICE_ETH);
+    priceEl.innerText = FALLBACK_PRICE_ETH + " ETH (fallback)";
+    feeEl.innerText = short(FALLBACK_FEE_RECIPIENT) + " (fallback)";
+    setStatus("Used fallback config due to error reading chain.");
+    return { mintPriceWei: fallbackWei, feeRecipient: FALLBACK_FEE_RECIPIENT, feeBps: 0, restrict: false };
+  }
+}
+
+connectBtn.onclick = async () => {
+  try {
+    if (!window.ethereum) { alert("Install MetaMask"); return; }
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    await ensureBaseNetwork();
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    const addr = await signer.getAddress();
+    setStatus("Connected: " + short(addr));
+  } catch (err) {
+    console.error(err);
+    setStatus("Connect failed: " + (err?.message || err));
+  }
+};
+
+refreshBtn.onclick = async () => {
+  await readDropConfig();
+};
+
+mintBtn.onclick = async () => {
+  try {
+    if (!window.ethereum) { alert("Please install MetaMask"); return; }
+    if (!signer) {
+      await connectBtn.onclick();
+      if (!signer) return;
+    }
+
+    setStatus("Preparing mint — reading on-chain config...");
+    const { mintPriceWei, feeRecipient } = await readDropConfig();
+    const qty = Math.max(1, Number(qtyEl.value) || 1);
+    const total = mintPriceWei * BigInt(qty);
+
+    setStatus("Sending mint tx — total value: " + ethers.formatEther(total) + " ETH");
+
+    const seadropWithSigner = new ethers.Contract(SEADROP_ADDRESS, SEADROP_ABI, signer);
+    const minterIfNotPayer = ethers.ZeroAddress;
+
+    const tx = await seadropWithSigner.mintPublic(
+      NFT_CONTRACT,
+      feeRecipient,
+      minterIfNotPayer,
+      qty,
+      { value: total }
+    );
+
+    setStatus("Tx sent: " + tx.hash);
+    await tx.wait();
+    setStatus("Mint confirmed: " + tx.hash);
+  } catch (err) {
+    console.error(err);
+    setStatus("Mint failed: " + (err?.message || err));
+  }
+};
+
+// initial read
+readDropConfig().catch(e => console.warn(e));
+</script>
+</body>
+</html>
