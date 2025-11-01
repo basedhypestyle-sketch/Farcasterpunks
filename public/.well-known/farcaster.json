@@ -1,0 +1,27 @@
+{
+  "accountAssociation": {
+    "header": "REPLACE_WITH_HEADER",
+    "payload": "REPLACE_WITH_PAYLOAD",
+    "signature": "REPLACE_WITH_SIGNATURE"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Farcaster Punks \u2014 Mini Mint",
+    "homeUrl": "https://farcaster-punks-mint.vercel.app/",
+    "imageUrl": "https://farcaster-punks-mint.vercel.app/assets/logo.png",
+    "postUrl": "https://farcaster-punks-mint.vercel.app/api/mint",
+    "buttons": [
+      {
+        "title": "Mint Now"
+      },
+      {
+        "title": "OpenSea",
+        "action": "link",
+        "target": "https://opensea.io/collection/farcaster-punks-59466883/overview"
+      }
+    ],
+    "splashImageUrl": "https://farcaster-punks-mint.vercel.app/assets/logo.png",
+    "splashBackgroundColor": "#110033",
+    "webhookUrl": "https://farcaster-punks-mint.vercel.app/api/webhook"
+  }
+}
