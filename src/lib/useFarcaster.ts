@@ -10,19 +10,24 @@ import { useEffect, useState } from "react";
  *   2) check a common global injection (window.__FARCASTER__ or window.farcaster)
  *   3) fallback false
  */
+
+interface FarcasterContext {
+  // Define properties based on the SDK context
+}
+
 export function useFarcaster() {
   const [inWarpcast, setInWarpcast] = useState(false);
-  const [context, setContext] = useState<any>(null);
+  const [context, setContext] = useState<FarcasterContext | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       // 1) try SDK import/init (best-effort)
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const sdk = require("@farcaster/frame-sdk");
+        const sdk = await import("@farcaster/frame-sdk");
         if (sdk?.init) {
           try {
-            // init may be sync or async
             const ctx = await sdk.init();
             setContext(ctx || null);
             setInWarpcast(true);
@@ -32,12 +37,11 @@ export function useFarcaster() {
           }
         }
       } catch (e) {
-        // package not present or require failed — ignore
+        // package not present or import failed — ignore
       }
 
       // 2) check runtime injection from Warpcast (common patterns)
       try {
-        // @ts-ignore
         const w: any = window;
         const injected = w.__FARCASTER__ || w.farcaster || w.Frame || w.Warpcast;
         if (injected) {
@@ -52,8 +56,9 @@ export function useFarcaster() {
       // 3) fallback: not inside warpcast/frame
       setInWarpcast(false);
       setContext(null);
+      setLoading(false);
     })();
   }, []);
 
-  return { inWarpcast, context };
+  return { inWarpcast, context, loading };
 }
