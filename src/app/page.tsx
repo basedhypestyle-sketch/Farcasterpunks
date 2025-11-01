@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import useFarcaster from '@/lib/useFarcaster'; // Corrected import statement
+import useFarcaster from '@/lib/useFarcaster'; // Ensure this path is correct
 
 export default function Page() {
   const { inWarpcast } = useFarcaster(); // Destructure inWarpcast from the hook
